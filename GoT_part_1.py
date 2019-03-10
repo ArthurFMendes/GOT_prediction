@@ -22,39 +22,6 @@ from sklearn.model_selection import train_test_split
 ########################
 GoT_df = pd.read_excel('GOT_character_predictions.xlsx')
 
-GoT_df['out_house'] = 0
-
-for house in GoT_df['house']:
-    percentage = GoT_df['isAlive'].sum() / GoT_df['isAlive'].count()
-    if percentage >= 0.9:
-        GoT_df.loc[house, 'out_house'] = 1
-
-
-'''
-        
-# Housing outlier
-GoT_df.house.nunique()
-
-GoT_df['out_house'] = 0
-
-percent = GoT_df['isAlive'].sum() / GoT_df['isAlive'].count()
-
-
-
-for house in Got_df['house']:
-    percentage = GoT_df['isAlive'].sum() / GoT_df['isAlive'].count()
-        
-    
-    
-housing['out_Lot_Area'] = 0
-
-
-for val in enumerate(housing.loc[ : , 'Lot Area']):
-    
-    if val[1] >= lot_area_hi:
-        housing.loc[val[0], 'out_Lot_Area'] = 1
-
-'''
 # Column names
 GoT_df.columns
 
@@ -548,3 +515,45 @@ MLPClassifier(activation='relu', alpha=1e-05, batch_size='auto',
               shuffle=True, solver='lbfgs', tol=0.0001,
               validation_fraction=0.1, verbose=False, warm_start=False)
 '''
+
+
+
+
+########################
+# Logistic Regression Modeling 
+########################
+
+import statsmodels.formula.api as smf # logistic regression
+
+GoT_train = pd.concat(X_train, y_train, axis = 1)
+
+# Biserial point correlations
+GoT_df.corr().round(3)
+
+
+# Modeling based on the most correlated explanatory variable
+logistic_small = smf.logit(formula = """isAlive ~ popularity""",
+                  data = GoT_train)
+
+
+results_logistic = logistic_small.fit()
+
+
+results_logistic.summary()
+
+
+
+# Full model
+logistic_full = smf.logit(formula = """choice ~ cartime +
+                                                carcost +
+                                                traintime +
+                                                traincost""",
+                                                data = GoT_train)
+
+
+results_logistic_full = logistic_full.fit()
+
+
+results_logistic_full.summary()
+
+
