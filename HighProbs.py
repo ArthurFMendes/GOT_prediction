@@ -97,3 +97,206 @@ for val in enumerate(GoT_df.loc[ : , 'house']):
         
         
         
+###############################################################################
+# Data Preparation
+###############################################################################
+
+print(
+      GoT_df
+      .isnull()
+      .sum()
+      )
+
+GoT_Chosen   = GoT_df.loc[:,['S.No',
+                                'male',
+                                'book1_A_Game_Of_Thrones',
+                                'book2_A_Clash_Of_Kings',
+                                'book3_A_Storm_Of_Swords',
+                                'book4_A_Feast_For_Crows',
+                                'book5_A_Dance_with_Dragons',
+                                'isAliveMother',
+                                'isAliveFather',
+                                'isAliveHeir',
+                                'isAliveSpouse',
+                                'isMarried',
+                                'isNoble',
+                                'numDeadRelations',
+                                'popularity',
+                                'isAlive',
+                                'out_house',
+                                'out_culture']]
+
+
+# Flagging missing values
+
+for col in GoT_Chosen:
+
+    """ Create columns that are 0s if a value was not missing and 1 if
+    a value is missing. """
+    
+    if GoT_Chosen[col].isnull().any():
+        GoT_Chosen['m_'+col] = GoT_df[col].isnull().astype(int)
+        
+        
+
+
+# Checking again
+print(
+      GoT_Chosen
+      .isnull()
+      .sum()
+      )
+
+
+
+GoT_data   = GoT_Chosen.loc[:,['S.No',
+                                'male',
+                                'book1_A_Game_Of_Thrones',
+                                'book2_A_Clash_Of_Kings',
+                                'book3_A_Storm_Of_Swords',
+                                'book4_A_Feast_For_Crows',
+                                'book5_A_Dance_with_Dragons',
+                                'isMarried',
+                                'isNoble',
+                                'numDeadRelations',
+                                'popularity',
+                                'm_isAliveMother',
+                                'm_isAliveFather',
+                                'm_isAliveHeir',
+                                'm_isAliveSpouse',
+                                'out_house',
+                                'out_culture']]
+
+
+GoT_target   = GoT_Chosen.loc[:,['isAlive']]
+
+
+X_train, X_test, y_train, y_test = train_test_split(
+            GoT_data,
+            GoT_target.values.ravel(),
+            test_size = 0.25,
+            random_state = 508,
+            stratify = GoT_target)
+
+
+
+###############################################################################
+# Random Forest in scikit-learn
+###############################################################################
+
+# Following the same procedure as other scikit-learn modeling techniques
+
+# Full forest using gini
+full_forest_gini = RandomForestClassifier(n_estimators = 500,
+                                     criterion = 'gini',
+                                     max_depth = None,
+                                     min_samples_leaf = 15,
+                                     bootstrap = True,
+                                     warm_start = False,
+                                     random_state = 508)
+
+
+# Fitting the models
+full_gini_fit = full_forest_gini.fit(X_train, y_train)
+
+
+
+# Scoring the gini model
+print('Training Score', full_gini_fit.score(X_train, y_train).round(4))
+print('Testing Score:', full_gini_fit.score(X_test, y_test).round(4))
+
+
+
+########################
+# Parameter tuning with GridSearchCV
+########################
+
+from sklearn.model_selection import GridSearchCV
+
+
+# Creating a hyperparameter grid
+estimator_space = pd.np.arange(100, 1000, 100)
+leaf_space = pd.np.arange(1, 200, 10)
+criterion_space = ['gini', 'entropy']
+bootstrap_space = [True, False]
+warm_start_space = [True, False]
+
+
+
+param_grid = {'n_estimators' : estimator_space,
+              'min_samples_leaf' : leaf_space,
+              'criterion' : criterion_space,
+              'bootstrap' : bootstrap_space,
+              'warm_start' : warm_start_space}
+
+
+
+# Building the model object one more time
+full_forest_grid = RandomForestClassifier(max_depth = None,
+                                          random_state = 508)
+
+
+# Creating a GridSearchCV object
+full_forest_cv = GridSearchCV(full_forest_grid, param_grid, cv = 3)
+
+
+
+# Fit it to the training data
+full_forest_cv.fit(X_train, y_train)
+
+
+# Print the optimal parameters and best score
+print("Tuned Logistic Regression Parameter:", full_forest_cv.best_params_)
+print("Tuned Logistic Regression Accuracy:", full_forest_cv.best_score_.round(4))
+
+'''
+Tuned Logistic Regression Parameter: {'bootstrap': False, 'criterion': 'gini', 
+'min_samples_leaf': 11, 'n_estimators': 100, 'warm_start': True}
+Tuned Logistic Regression Accuracy: 0.8108
+'''
+
+########################
+# Parameter tuning with GridSearchCV
+########################
+
+# Creating a hyperparameter grid
+estimator_space = pd.np.arange(50, 130, 10)
+leaf_space = pd.np.arange(1, 50, 3)
+criterion_space = ['gini']
+bootstrap_space = [False]
+warm_start_space = [True]
+
+
+
+param_grid = {'n_estimators' : estimator_space,
+              'min_samples_leaf' : leaf_space,
+              'criterion' : criterion_space,
+              'bootstrap' : bootstrap_space,
+              'warm_start' : warm_start_space}
+
+
+
+# Building the model object one more time
+full_hyped = RandomForestClassifier(max_depth = None,
+                                          random_state = 508)
+
+
+# Creating a GridSearchCV object
+hyped_model = GridSearchCV(full_hyped, param_grid, cv = 3)
+
+
+
+# Fit it to the training data
+hyped_model.fit(X_train, y_train)
+
+'''
+Tuned Logistic Regression Parameter: {'bootstrap': False, 'criterion': 'gini', 
+'min_samples_leaf': 4, 'n_estimators': 90, 'warm_start': True}
+Tuned Logistic Regression Accuracy: 0.8122
+'''
+
+
+# Print the optimal parameters and best score
+print("Tuned Logistic Regression Parameter:", hyped_model.best_params_)
+print("Tuned Logistic Regression Accuracy:", hyped_model.best_score_.round(4))
+
