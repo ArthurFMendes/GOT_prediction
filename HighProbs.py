@@ -190,7 +190,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 full_forest_gini = RandomForestClassifier(n_estimators = 500,
                                      criterion = 'gini',
                                      max_depth = None,
-                                     min_samples_leaf = 15,
+                                     min_samples_leaf = 11,
                                      bootstrap = True,
                                      warm_start = False,
                                      random_state = 508)
@@ -299,4 +299,57 @@ Tuned Logistic Regression Accuracy: 0.8122
 # Print the optimal parameters and best score
 print("Tuned Logistic Regression Parameter:", hyped_model.best_params_)
 print("Tuned Logistic Regression Accuracy:", hyped_model.best_score_.round(4))
+
+
+
+
+###############################################################################
+# Random Forest in scikit-learn
+###############################################################################
+
+# Following the same procedure as other scikit-learn modeling techniques
+
+# Full forest using gini
+full_forest_gini = RandomForestClassifier(n_estimators = 90,
+                                     criterion = 'gini',
+                                     max_depth = None,
+                                     min_samples_leaf = 15,
+                                     bootstrap = False,
+                                     warm_start = True,
+                                     random_state = 508)
+
+
+# Fitting the models
+full_gini_fit = full_forest_gini.fit(X_train, y_train)
+
+
+# Scoring the gini model
+print('Training Score', full_gini_fit.score(X_train, y_train).round(4))
+print('Testing Score:', full_gini_fit.score(X_test, y_test).round(4))
+
+
+# Saving score objects
+gini_full_train = full_gini_fit.score(X_train, y_train)
+gini_full_test  = full_gini_fit.score(X_test, y_test)
+
+###############################################################################
+
+
+# Import necessary modules
+from sklearn.metrics import roc_curve
+
+# Compute predicted probabilities: y_pred_prob
+y_pred_prob = full_gini_fit.predict_proba(X_test)[:,1]
+
+# Generate ROC curve values: fpr, tpr, thresholds
+fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
+
+# Plot ROC curve
+plt.plot([0, 1], [0, 1], 'k--')
+plt.plot(fpr, tpr)
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve')
+plt.show()
+
 
