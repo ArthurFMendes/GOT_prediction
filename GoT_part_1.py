@@ -71,7 +71,7 @@ GoT_Chosen   = GoT_df.loc[:,['S.No',
                                 'isAlive']]
 
 
-
+# Flagging missing values
 
 for col in GoT_Chosen:
 
@@ -340,12 +340,6 @@ rf_optimal_test  = rf_optimal.score(X_test, y_test)
 # Gradient Boosted Machines
 ###############################################################################
 
-"""
-Prof. Chase:
-    Gradient boosted machines (gbms) are like decision trees, but instead of
-    starting fresh with each iteration, they learn from mistakes made in
-    previous iterations.
-"""
 
 from sklearn.ensemble import GradientBoostingClassifier
 
@@ -359,13 +353,6 @@ gbm_3 = GradientBoostingClassifier(loss = 'deviance',
                                   random_state = 508,
                                   )
 
-
-"""
-Prof. Chase:
-    Notice above that we are using friedman_mse as the criterion. Friedman
-    proposed that instead of focusing on one MSE value for the entire tree,
-    the algoirthm should localize its optimal MSE for each region of the tree.
-"""
 
 
 gbm_basic_fit = gbm_3.fit(X_train, y_train)
@@ -383,11 +370,6 @@ gbm_basic_train = gbm_basic_fit.score(X_train, y_train)
 gmb_basic_test  = gbm_basic_fit.score(X_test, y_test)
 
 
-"""
-Prof. Chase:
-    It appears the model is not generalizing well. Let's try to work on that
-    using GridSearhCV.
-"""
 
 
 ########################
