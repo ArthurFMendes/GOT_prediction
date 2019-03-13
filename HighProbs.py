@@ -12,7 +12,8 @@ from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
 
 
 ########################
@@ -322,6 +323,7 @@ full_forest_gini = RandomForestClassifier(n_estimators = 90,
 # Fitting the models
 full_gini_fit = full_forest_gini.fit(X_train, y_train)
 
+full_forest_predict = full_forest_gini.predict(X_test)
 
 # Scoring the gini model
 print('Training Score', full_gini_fit.score(X_train, y_train).round(4))
@@ -333,7 +335,8 @@ gini_full_train = full_gini_fit.score(X_train, y_train)
 gini_full_test  = full_gini_fit.score(X_test, y_test)
 
 ###############################################################################
-
+# ROC curve
+###############################################################################
 
 # Import necessary modules
 from sklearn.metrics import roc_curve
@@ -352,4 +355,21 @@ plt.ylabel('True Positive Rate')
 plt.title('ROC Curve')
 plt.show()
 
+###############################################################################
+# Variable importance
+###############################################################################
 
+
+import pandas as pd
+feature_importances = pd.DataFrame(full_gini_fit.feature_importances_,
+                                   index = X_train.columns,
+                                   columns=
+                                   ['importance']).sort_values('importance',   
+                                   ascending=False)
+
+print(feature_importances)
+
+
+
+print ('\nClasification report:\n', classification_report(y_test, full_forest_predict))
+print ('\nConfussion matrix:\n',confusion_matrix(y_test, full_forest_predict))
