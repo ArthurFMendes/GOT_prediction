@@ -15,6 +15,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn import metrics
+import seaborn as sns
 
 ########################
 # Fundamental Dataset Exploration
@@ -300,16 +301,16 @@ optimal_forrest_fit = optimal_forrest.fit(X_train, y_train)
 full_forest_predict = optimal_forrest.predict(X_test)
 
 # Scoring the gini model
-print('Training Score', full_gini_fit.score(X_train, y_train).round(4))
-print('Testing Score:', full_gini_fit.score(X_test, y_test).round(4))
+print('Training Score', optimal_forrest_fit.score(X_train, y_train).round(4))
+print('Testing Score:', optimal_forrest_fit.score(X_test, y_test).round(4))
 
 
 # Saving score objects
-gini_full_train = full_gini_fit.score(X_train, y_train)
-gini_full_test  = full_gini_fit.score(X_test, y_test)
+gini_full_train = optimal_forrest_fit.score(X_train, y_train)
+gini_full_test  = optimal_forrest_fit.score(X_test, y_test)
 
 ###############################################################################
-# ROC curve for Random Forrest
+# ROC curve for Random Forest
 ###############################################################################
 
 # Import necessary modules
@@ -327,7 +328,7 @@ plt.plot(fpr, tpr)
 plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate')
 plt.title('ROC Curve')
-plt.savefig('ROC Random Forrest')
+plt.savefig('ROC Random Forest')
 plt.show()
 
 
@@ -351,8 +352,8 @@ print(feature_importances)
 
 
 
-print ('\nClasification report:\n', classification_report(y_test, full_forest_cv))
-print ('\nConfussion matrix:\n',confusion_matrix(y_test, full_forest_cv))
+print ('\nClassification report:\n', classification_report(y_test, full_forest_predict))
+print ('\nConfusion matrix:\n',confusion_matrix(y_test, full_forest_predict))
 
 
 
@@ -493,3 +494,4 @@ metrics.auc(fpr, tpr)
 
 print ('\nClasification report:\n', classification_report(y_test, gbm_optimal_predict))
 print ('\nConfussion matrix:\n',confusion_matrix(y_test, gbm_optimal_predict))
+
