@@ -2,7 +2,7 @@
 
   This is data analysis on who will live or die on the fictional series "Game of Thrones". We will be walking through the data analysis process and making ajustments as needed.
 
-  We will start this analysis by importing the data and doing a quick exploration, to understand what are the variables and how we shuld proceed. The lastest version of the code can be found [here](https://github.com/ArthurFMendes/GOT_prediction/blob/master/LordFlag.py)
+  We will start this analysis by importing the data and doing a quick exploration, to understand what are the variables and how we shuld proceed. The lastest version of the code can be found [here](https://github.com/ArthurFMendes/GOT_prediction/blob/master/LordFlag.py).
   
 ```python
 
