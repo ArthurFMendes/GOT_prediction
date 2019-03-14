@@ -108,11 +108,23 @@ GoT_df['out_title'] = 0
 
 for val in enumerate(GoT_df.loc[ : , 'title']):
     '''
-    
+    Lords seem to die a lot
     '''
     if val[1].startswith('Lord') == True:
         GoT_df.loc[val[0], 'out_title'] = 1
         
+
+
+
+for val in enumerate(GoT_df.loc[ : , 'title']):
+    '''
+    Prince and princess seem to die a lot
+    '''
+    if 'Prince' in val[1]:
+        GoT_df.loc[val[0], 'out_title'] = 1
+
+
+
          
 ###############################################################################
 # Data Preparation
@@ -167,7 +179,7 @@ print(
 
 
 
-GoT_data   = GoT_Chosen.loc[:,['male',
+GoT_data   = GoT_Chosen.loc[:,[ 'male',
                                 'book1_A_Game_Of_Thrones',
                                 'book2_A_Clash_Of_Kings',
                                 'book3_A_Storm_Of_Swords',
@@ -223,6 +235,49 @@ print('Testing Score:', full_gini_fit.score(X_test, y_test).round(4))
 
 
 
+
+########################
+# Parameter tuning with GridSearchCV
+########################
+
+from sklearn.model_selection import GridSearchCV
+
+
+# Creating a hyperparameter grid
+estimator_space = pd.np.arange(100, 1000, 100)
+leaf_space = pd.np.arange(1, 200, 10)
+criterion_space = ['gini', 'entropy']
+bootstrap_space = [True, False]
+warm_start_space = [True, False]
+
+
+
+param_grid = {'n_estimators' : estimator_space,
+              'min_samples_leaf' : leaf_space,
+              'criterion' : criterion_space,
+              'bootstrap' : bootstrap_space,
+              'warm_start' : warm_start_space}
+
+
+
+# Building the model object one more time
+full_forest_grid = RandomForestClassifier(max_depth = None,
+                                          random_state = 508)
+
+
+# Creating a GridSearchCV object
+full_forest_cv = GridSearchCV(full_forest_grid, param_grid, cv = 3)
+
+
+
+# Fit it to the training data
+full_forest_cv.fit(X_train, y_train)
+
+# Print the optimal parameters and best score
+print("Tuned Logistic Regression Parameter:", full_forest_cv.best_params_)
+print("Tuned Logistic Regression Accuracy:", full_forest_cv.best_score_.round(4))
+
+
 ###############################################################################
 # Gradient Boosted Machines
 ###############################################################################
@@ -252,3 +307,45 @@ print('Testing Score:', gbm_basic_fit.score(X_test, y_test).round(4))
 
 gbm_basic_train = gbm_basic_fit.score(X_train, y_train)
 gmb_basic_test  = gbm_basic_fit.score(X_test, y_test)
+
+
+########################
+# Applying GridSearchCV
+########################
+
+from sklearn.model_selection import GridSearchCV
+
+
+# Creating a hyperparameter grid
+learn_space = pd.np.arange(0.1, 1.6, 0.1)
+estimator_space = pd.np.arange(50, 250, 50)
+depth_space = pd.np.arange(1, 10)
+criterion_space = ['friedman_mse', 'mse', 'mae']
+
+
+param_grid = {'learning_rate' : learn_space,
+              'max_depth' : depth_space,
+              'criterion' : criterion_space,
+              'n_estimators' : estimator_space}
+
+
+
+# Building the model object one more time
+gbm_grid = GradientBoostingClassifier(random_state = 508)
+
+
+
+# Creating a GridSearchCV object
+gbm_grid_cv = GridSearchCV(gbm_grid, param_grid, cv = 3)
+
+
+
+# Fit it to the training data
+gbm_grid_cv.fit(X_train, y_train)
+
+
+
+# Print the optimal parameters and best score
+print("Tuned GBM Parameter:", gbm_grid_cv.best_params_)
+print("Tuned GBM Accuracy:", gbm_grid_cv.best_score_.round(4))
+
