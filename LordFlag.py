@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
-
+from sklearn import metrics
 
 ########################
 # Fundamental Dataset Exploration
@@ -268,7 +268,11 @@ full_forest_grid = RandomForestClassifier(max_depth = None,
 # Creating a GridSearchCV object
 full_forest_cv = GridSearchCV(full_forest_grid, param_grid, cv = 3)
 
-
+'''
+Tuned Logistic Regression Parameter: {'bootstrap': False, 'criterion': 'gini', 
+'min_samples_leaf': 21, 'n_estimators': 200, 'warm_start': True}
+Tuned Logistic Regression Accuracy: 0.8019
+'''
 
 # Fit it to the training data
 full_forest_cv.fit(X_train, y_train)
@@ -276,6 +280,82 @@ full_forest_cv.fit(X_train, y_train)
 # Print the optimal parameters and best score
 print("Tuned Logistic Regression Parameter:", full_forest_cv.best_params_)
 print("Tuned Logistic Regression Accuracy:", full_forest_cv.best_score_.round(4))
+
+
+# Using the optimal Random Forrest 
+
+# Full forest using gini
+optimal_forrest = RandomForestClassifier(n_estimators = 200,
+                                         criterion = 'gini',
+                                         max_depth = None,
+                                         min_samples_leaf = 21,
+                                         bootstrap = False,
+                                         warm_start = True,
+                                         random_state = 508)
+
+
+# Fitting the models
+optimal_forrest_fit = optimal_forrest.fit(X_train, y_train)
+
+full_forest_predict = optimal_forrest.predict(X_test)
+
+# Scoring the gini model
+print('Training Score', full_gini_fit.score(X_train, y_train).round(4))
+print('Testing Score:', full_gini_fit.score(X_test, y_test).round(4))
+
+
+# Saving score objects
+gini_full_train = full_gini_fit.score(X_train, y_train)
+gini_full_test  = full_gini_fit.score(X_test, y_test)
+
+###############################################################################
+# ROC curve for Random Forrest
+###############################################################################
+
+# Import necessary modules
+from sklearn.metrics import roc_curve
+
+# Compute predicted probabilities: y_pred_prob
+y_pred_prob = optimal_forrest_fit.predict_proba(X_test)[:,1]
+
+# Generate ROC curve values: fpr, tpr, thresholds
+fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
+
+# Plot ROC curve
+plt.plot([0, 1], [0, 1], 'k--')
+plt.plot(fpr, tpr)
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve')
+plt.savefig('ROC Random Forrest')
+plt.show()
+
+
+
+metrics.auc(fpr, tpr)
+
+
+###############################################################################
+# Variable importance
+###############################################################################
+
+
+import pandas as pd
+feature_importances = pd.DataFrame(optimal_forrest_fit.feature_importances_,
+                                   index = X_train.columns,
+                                   columns=
+                                   ['importance']).sort_values('importance',   
+                                   ascending=False)
+
+print(feature_importances)
+
+
+
+print ('\nClasification report:\n', classification_report(y_test, full_forest_cv))
+print ('\nConfussion matrix:\n',confusion_matrix(y_test, full_forest_cv))
+
+
+
 
 
 ###############################################################################
@@ -343,9 +423,73 @@ gbm_grid_cv = GridSearchCV(gbm_grid, param_grid, cv = 3)
 # Fit it to the training data
 gbm_grid_cv.fit(X_train, y_train)
 
+gbm_grid_pred = gbm_grid_cv.predict(X_test)
 
+'''
+Tuned GBM Parameter: {'criterion': 'friedman_mse', 'learning_rate': 0.1,
+'max_depth': 2, 'n_estimators': 150}
+Tuned GBM Accuracy: 0.8026
+'''
 
 # Print the optimal parameters and best score
 print("Tuned GBM Parameter:", gbm_grid_cv.best_params_)
 print("Tuned GBM Accuracy:", gbm_grid_cv.best_score_.round(4))
 
+
+# Building a optimal GBM
+
+gbm_optimal = GradientBoostingClassifier(loss = 'deviance',
+                                         learning_rate = 0.1,
+                                         n_estimators = 150,
+                                         max_depth = 2,
+                                         criterion = 'friedman_mse',
+                                         warm_start = True,
+                                         random_state = 508,)
+
+
+gbm_optimal_fit = gbm_optimal.fit(X_train, y_train)
+
+
+gbm_optimal_predict = gbm_optimal_fit.predict(X_test)
+
+
+# Training and Testing Scores
+print('Training Score', gbm_optimal_fit.score(X_train, y_train).round(4))
+print('Testing Score:', gbm_optimal_fit.score(X_test, y_test).round(4))
+
+
+gbm_basic_train = gbm_optimal_fit.score(X_train, y_train)
+gmb_basic_test  = gbm_optimal_fit.score(X_test, y_test)
+
+###############################################################################
+# ROC curve for GBM
+###############################################################################
+
+# Import necessary modules
+from sklearn.metrics import roc_curve
+
+# Compute predicted probabilities: y_pred_prob
+y_pred_prob = gbm_optimal_fit.predict_proba(X_test)[:,1]
+
+# Generate ROC curve values: fpr, tpr, thresholds
+fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
+
+# Plot ROC curve
+plt.plot([0, 1], [0, 1], 'k--')
+plt.plot(fpr, tpr)
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve')
+plt.savefig('ROC for GBM')
+plt.show()
+
+metrics.auc(fpr, tpr)
+
+
+###############################################################################
+# Classification Report and Confussion Matrix
+###############################################################################
+
+
+print ('\nClasification report:\n', classification_report(y_test, gbm_optimal_predict))
+print ('\nConfussion matrix:\n',confusion_matrix(y_test, gbm_optimal_predict))
