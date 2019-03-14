@@ -9,8 +9,6 @@ Created on Fri Mar  8 09:27:37 2019
 
 # Loading new libraries
 from sklearn.ensemble import RandomForestClassifier
-
-# Loading other libraries
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
@@ -54,21 +52,21 @@ print(
       )
 
 GoT_Chosen   = GoT_df.loc[:,['S.No',
-                                'male',
-                                'book1_A_Game_Of_Thrones',
-                                'book2_A_Clash_Of_Kings',
-                                'book3_A_Storm_Of_Swords',
-                                'book4_A_Feast_For_Crows',
-                                'book5_A_Dance_with_Dragons',
-                                'isAliveMother',
-                                'isAliveFather',
-                                'isAliveHeir',
-                                'isAliveSpouse',
-                                'isMarried',
-                                'isNoble',
-                                'numDeadRelations',
-                                'popularity',
-                                'isAlive']]
+                             'male',
+                             'book1_A_Game_Of_Thrones',
+                             'book2_A_Clash_Of_Kings',
+                             'book3_A_Storm_Of_Swords',
+                             'book4_A_Feast_For_Crows',
+                             'book5_A_Dance_with_Dragons',
+                             'isAliveMother',
+                             'isAliveFather',
+                             'isAliveHeir',
+                             'isAliveSpouse',
+                             'isMarried',
+                             'isNoble',
+                             'numDeadRelations',
+                             'popularity',
+                             'isAlive']]
 
 
 # Flagging missing values
@@ -110,8 +108,7 @@ print(
 
 
 
-GoT_data   = GoT_Chosen.loc[:,['S.No',
-                                'male',
+GoT_data   = GoT_Chosen.loc[:,[ 'male',
                                 'book1_A_Game_Of_Thrones',
                                 'book2_A_Clash_Of_Kings',
                                 'book3_A_Storm_Of_Swords',
