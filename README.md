@@ -65,5 +65,103 @@ GoT_target   = GoT_Chosen.loc[:,['isAlive']]
 
 We chose to go ahead with two different machine learning models (so far).
 
-1. **Random Forrest**
-2. **Gradiant Boosting Machine**
+1. **Random Forest**
+2. **Gradient Boosting Machine**
+
+********
+
+## Random Forest
+
+This machine learning algorithm is an ensemble learning method for classification or regression that work by constructing a variety of decision trees at training time and outputting the class that is the mode of the classes (classification) or mean prediction (regression) of the individual trees. 
+
+By ensembling different trees together in different regions of your data, you end up with a much higher predictive accuracy than otherwise.
+
+### How did we measure performance?
+
+In the process of creating a model, performance measurement is an essential task. Because of that, we chose not to rely on only one measurement, we use **score, AUC and ROC, Classification report and Confusion matrix**. The score is a simple way to compare the results with other linear models (similar to R-squared). 
+
+The Score was as follows:
+```
+Training Score 0.8136
+Testing Score: 0.8214
+```
+AUC - ROC curve is a performance measurement for classification problems. ROC is a probability curve and AUC represents the degree of separability. It tells how much model is capable of distinguishing between classes. Higher the AUC, better the model is at predicting 0s as 0s and 1s as 1s. By analogy, Higher the AUC, better the model is at distinguishing between patients with disease and no disease.
+
+The ROC curve is mapped with TPR(True Positive Rate) against the FPR(False Positive Rate) where TPR is on y-axis and FPR is on the x-axis.
+
+The ROC was as follows:
+
+![alt text](
+        https://github.com/ArthurFMendes/GOT_prediction/blob/master/ROC%20Random%20Forrest.png
+      )
+
+With a AUC score of
+```
+metrics.auc(fpr, tpr)
+0.8528836754643205
+```
+#### Classification Report
+
+The classification report shows the main classification metrics precision, recall and f1-score on a per-class basis. The metrics are defined in terms of true and false positives, and true and false negatives. Positive and negative in this case are generic names for the classes of a binary classification problem. There are four ways to check if the predictions are right or wrong:
+```
+TN / True Negative: case was negative and predicted negative
+TP / True Positive: case was positive and predicted positive
+FN / False Negative: case was positive but predicted negative
+FP / False Positive: case was negative but predicted positive
+```
+#### Precision – What percent of your predictions were correct?
+
+Precision is the ability of a classifier not to label an instance positive that is actually negative. For each class it is defined as the ratio of true positives to the sum of true and false positives.
+```
+TP – True Positives
+FP – False Positives
+```
+Precision – Accuracy of positive predictions.
+```
+Precision = TP/(TP + FP)
+```
+#### Recall – What percent of the positive cases did you catch?
+
+Recall is the ability of a classifier to find all positive instances. For each class it is defined as the ratio of true positives to the sum of true positives and false negatives.
+```
+FN – False Negatives
+```
+Recall: Fraction of positives that were correctly identified.
+```
+Recall = TP/(TP+FN)
+```
+#### F1 score – What percent of positive predictions were correct? 
+
+The F1 score is a weighted harmonic mean of precision and recall such that the best score is 1.0 and the worst is 0.0. Generally speaking, F1 scores are lower than accuracy measures as they embed precision and recall into their computation. As a rule of thumb, the weighted average of F1 should be used to compare classifier models, not global accuracy.
+```
+F1 Score = 2*(Recall * Precision) / (Recall + Precision)
+```
+The classification Report:
+
+|      | Precision          | Recall  |f1-score |
+| :------------- |:-------------| :-----|:-----|
+| 0            | 0.81 | 0.39 |0.52|
+| 1            | 0.82       |   0.97 |0.89|
+| avg / total  | 0.82      |    0.82 |0.80|
+
+#### Variable Importance
+Another benefit that Random Forest brings is the **variable importance**. The model automatically create a list of variables and its importance for the results. This are the most important features once we call the function:
+
+|                            |Importance|
+| :------------- |:-------------|
+|out_house                     |0.280200|
+|popularity                    |0.260068|
+|book4_A_Feast_For_Crows       |0.188053|
+|male                          |0.049978|
+|book1_A_Game_Of_Thrones       |0.047403|
+|numDeadRelations              |0.044101|
+|out_culture                   |0.035871|
+|book5_A_Dance_with_Dragons    |0.023130|
+|isNoble                       |0.020967|
+|book2_A_Clash_Of_Kings        |0.020779|
+|book3_A_Storm_Of_Swords       |0.016258|
+|m_isAliveSpouse               |0.005120|
+|isMarried                     |0.005063|
+|out_title                     |0.003009|
+|m_isAliveFather               |0.000000|
+|m_isAliveHeir                 |0.000000|
