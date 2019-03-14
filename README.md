@@ -144,6 +144,18 @@ The classification Report:
 | 1            | 0.82       |   0.97 |0.89|
 | avg / total  | 0.82      |    0.82 |0.80|
 
+#### Confusion Matrix
+
+A confusion matrix is a table that is used to describe the performance of a classification model on a set of test data for which the true values are known. The confusion matrix itself is relatively simple to understand, but the related terminology can be confusing.
+
+The terms of a confusion matrix are the same as the classification report, only give in the actual number of observations that are true posite, true negative, false positive and false negative.
+
+|              | Predicted 0   | Predicted 1  |
+| :----------- |:--------------| :------------|
+| **Actual 0**     | 48            |   76         |
+| **Actual 1**     | 11            |   352        |
+
+
 #### Variable Importance
 Another benefit that Random Forest brings is the **variable importance**. The model automatically create a list of variables and its importance for the results. This are the most important features once we call the function:
 
