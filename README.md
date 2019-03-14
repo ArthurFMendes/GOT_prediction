@@ -183,5 +183,7 @@ Another benefit that Random Forest brings is the **variable importance**. The mo
 #### References
 
 [AUC - ROC curce](https://towardsdatascience.com/understanding-auc-roc-curve-68b2303cc9c5)
+
 [Classification Report](https://muthu.co/understanding-the-classification-report-in-sklearn/)
+
 [Simple guide to confusion matrix terminology](https://www.dataschool.io/simple-guide-to-confusion-matrix-terminology/)
