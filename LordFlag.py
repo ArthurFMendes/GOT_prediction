@@ -16,6 +16,7 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn import metrics
 
+
 ########################
 # Fundamental Dataset Exploration
 ########################
@@ -138,6 +139,7 @@ print(
 
 GoT_Chosen   = GoT_df.loc[:,['S.No',
                                 'male',
+                                'dateOfBirth',
                                 'book1_A_Game_Of_Thrones',
                                 'book2_A_Clash_Of_Kings',
                                 'book3_A_Storm_Of_Swords',
@@ -170,6 +172,27 @@ for col in GoT_Chosen:
         
 
 
+# Date of birth being filled with the median
+fill = GoT_Chosen['dateOfBirth'].median()
+
+GoT_Chosen['dateOfBirth'] = GoT_Chosen['dateOfBirth'].fillna(fill)
+
+
+# Outlier flags
+    
+low_dateOfBirth = 200
+
+
+GoT_Chosen['out_dateOfBirth'] = 0
+
+
+for val in enumerate(GoT_Chosen.loc[ : , 'dateOfBirth']):
+    
+    if val[1] <= low_dateOfBirth:
+        GoT_Chosen.loc[val[0], 'out_dateOfBirth'] = 1
+
+
+
 # Checking again
 print(
       GoT_Chosen
@@ -189,12 +212,11 @@ GoT_data   = GoT_Chosen.loc[:,[ 'male',
                                 'isNoble',
                                 'numDeadRelations',
                                 'popularity',
-                                'm_isAliveFather',
-                                'm_isAliveHeir',
                                 'm_isAliveSpouse',
                                 'out_house',
                                 'out_culture',
-                                'out_title']]
+                                'out_title',
+                                'out_dateOfBirth']]
 
 
 GoT_target   = GoT_Chosen.loc[:,['isAlive']]
@@ -235,7 +257,6 @@ print('Testing Score:', full_gini_fit.score(X_test, y_test).round(4))
 
 
 
-
 ########################
 # Parameter tuning with GridSearchCV
 ########################
@@ -244,11 +265,11 @@ from sklearn.model_selection import GridSearchCV
 
 
 # Creating a hyperparameter grid
-estimator_space = pd.np.arange(100, 1000, 100)
+estimator_space = pd.np.arange(50, 500, 50)
 leaf_space = pd.np.arange(1, 200, 10)
 criterion_space = ['gini', 'entropy']
-bootstrap_space = [True, False]
-warm_start_space = [True, False]
+bootstrap_space = [False]
+warm_start_space = [True]
 
 
 
@@ -284,11 +305,11 @@ print("Tuned Logistic Regression Accuracy:", full_forest_cv.best_score_.round(4)
 
 # Using the optimal Random Forrest 
 
-# Full forest using gini
-optimal_forrest = RandomForestClassifier(n_estimators = 200,
-                                         criterion = 'gini',
+# Full forest using entropy
+optimal_forrest = RandomForestClassifier(n_estimators = 350,
+                                         criterion = 'entropy',
                                          max_depth = None,
-                                         min_samples_leaf = 21,
+                                         min_samples_leaf = 11,
                                          bootstrap = False,
                                          warm_start = True,
                                          random_state = 508)
@@ -299,17 +320,21 @@ optimal_forrest_fit = optimal_forrest.fit(X_train, y_train)
 
 full_forest_predict = optimal_forrest.predict(X_test)
 
+
+
 # Scoring the gini model
-print('Training Score', full_gini_fit.score(X_train, y_train).round(4))
-print('Testing Score:', full_gini_fit.score(X_test, y_test).round(4))
+print('Training Score', optimal_forrest_fit.score(X_train, y_train).round(4))
+print('Testing Score:', optimal_forrest_fit.score(X_test, y_test).round(4))
 
 
 # Saving score objects
-gini_full_train = full_gini_fit.score(X_train, y_train)
-gini_full_test  = full_gini_fit.score(X_test, y_test)
+gini_full_train = optimal_forrest_fit.score(X_train, y_train)
+gini_full_test  = optimal_forrest_fit.score(X_test, y_test)
+
+
 
 ###############################################################################
-# ROC curve for Random Forrest
+# ROC curve for Random Forest
 ###############################################################################
 
 # Import necessary modules
@@ -327,7 +352,7 @@ plt.plot(fpr, tpr)
 plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate')
 plt.title('ROC Curve')
-plt.savefig('ROC Random Forrest')
+#plt.savefig('ROC Random Forest')
 plt.show()
 
 
@@ -351,8 +376,8 @@ print(feature_importances)
 
 
 
-print ('\nClasification report:\n', classification_report(y_test, full_forest_cv))
-print ('\nConfussion matrix:\n',confusion_matrix(y_test, full_forest_cv))
+print ('\nClassification report:\n', classification_report(y_test, full_forest_predict))
+print ('\nConfusion matrix:\n',confusion_matrix(y_test, full_forest_predict))
 
 
 
@@ -361,6 +386,33 @@ print ('\nConfussion matrix:\n',confusion_matrix(y_test, full_forest_cv))
 ###############################################################################
 # Gradient Boosted Machines
 ###############################################################################
+
+
+GoT_data   = GoT_Chosen.loc[:,[ 'male',
+                                'book1_A_Game_Of_Thrones',
+                                'book2_A_Clash_Of_Kings',
+                                'book3_A_Storm_Of_Swords',
+                                'book4_A_Feast_For_Crows',
+                                'book5_A_Dance_with_Dragons',
+                                'isMarried',
+                                'isNoble',
+                                'numDeadRelations',
+                                'popularity',
+                                'out_house',
+                                'out_culture',
+                                'out_dateOfBirth']]
+
+
+GoT_target   = GoT_Chosen.loc[:,['isAlive']]
+
+
+X_train, X_test, y_train, y_test = train_test_split(
+            GoT_data,
+            GoT_target.values.ravel(),
+            test_size = 0.25,
+            random_state = 508)
+
+
 
 from sklearn.ensemble import GradientBoostingClassifier
 
@@ -396,11 +448,12 @@ gmb_basic_test  = gbm_basic_fit.score(X_test, y_test)
 from sklearn.model_selection import GridSearchCV
 
 
-# Creating a hyperparameter grid
-learn_space = pd.np.arange(0.1, 1.6, 0.1)
-estimator_space = pd.np.arange(50, 250, 50)
+# Creating a hyperparameter grid'
+
+learn_space = pd.np.arange(0.1, 2.5, 0.1)
+estimator_space = pd.np.arange(50, 250, 10)
 depth_space = pd.np.arange(1, 10)
-criterion_space = ['friedman_mse', 'mse', 'mae']
+criterion_space = ['friedman_mse']
 
 
 param_grid = {'learning_rate' : learn_space,
@@ -419,16 +472,22 @@ gbm_grid = GradientBoostingClassifier(random_state = 508)
 gbm_grid_cv = GridSearchCV(gbm_grid, param_grid, cv = 3)
 
 
-
 # Fit it to the training data
 gbm_grid_cv.fit(X_train, y_train)
 
 gbm_grid_pred = gbm_grid_cv.predict(X_test)
 
 '''
-Tuned GBM Parameter: {'criterion': 'friedman_mse', 'learning_rate': 0.1,
-'max_depth': 2, 'n_estimators': 150}
-Tuned GBM Accuracy: 0.8026
+Tuned GBM Parameter: {'criterion': 'friedman_mse', 'learning_rate': 0.1, 
+'max_depth': 2, 'n_estimators': 50}
+Tuned GBM Accuracy: 0.8136
+
+Tuned GBM Parameter: {'criterion': 'friedman_mse', 'learning_rate': 0.1, 
+'max_depth': 3, 'n_estimators': 220}
+Tuned GBM Accuracy: 0.8252
+
+Tuned GBM Parameter: {'criterion': 'friedman_mse', 'learning_rate': 1.1, 
+'max_depth': 2, 'n_estimators': 140}
 '''
 
 # Print the optimal parameters and best score
@@ -440,8 +499,8 @@ print("Tuned GBM Accuracy:", gbm_grid_cv.best_score_.round(4))
 
 gbm_optimal = GradientBoostingClassifier(loss = 'deviance',
                                          learning_rate = 0.1,
-                                         n_estimators = 150,
-                                         max_depth = 2,
+                                         n_estimators = 220,
+                                         max_depth = 3,
                                          criterion = 'friedman_mse',
                                          warm_start = True,
                                          random_state = 508,)
@@ -460,6 +519,7 @@ print('Testing Score:', gbm_optimal_fit.score(X_test, y_test).round(4))
 
 gbm_basic_train = gbm_optimal_fit.score(X_train, y_train)
 gmb_basic_test  = gbm_optimal_fit.score(X_test, y_test)
+
 
 ###############################################################################
 # ROC curve for GBM
@@ -480,7 +540,7 @@ plt.plot(fpr, tpr)
 plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate')
 plt.title('ROC Curve')
-plt.savefig('ROC for GBM')
+#plt.savefig('ROC for GBM')
 plt.show()
 
 metrics.auc(fpr, tpr)
@@ -491,5 +551,6 @@ metrics.auc(fpr, tpr)
 ###############################################################################
 
 
-print ('\nClasification report:\n', classification_report(y_test, gbm_optimal_predict))
-print ('\nConfussion matrix:\n',confusion_matrix(y_test, gbm_optimal_predict))
+print ('\nClassification report:\n', classification_report(y_test, gbm_optimal_predict))
+print ('\nConfusion matrix:\n',confusion_matrix(y_test, gbm_optimal_predict))
+
