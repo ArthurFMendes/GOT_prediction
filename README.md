@@ -82,8 +82,8 @@ In the process of creating a model, performance measurement is an essential task
 
 The Score was as follows:
 ```
-Training Score 0.8136
-Testing Score: 0.8214
+Training Score 0.8403
+Testing Score: 0.8604
 ```
 AUC - ROC curve is a performance measurement for classification problems. ROC is a probability curve and AUC represents the degree of separability. It tells how much model is capable of distinguishing between classes. Higher the AUC, better the model is at predicting 0s as 0s and 1s as 1s. By analogy, Higher the AUC, better the model is at distinguishing between patients with disease and no disease.
 
