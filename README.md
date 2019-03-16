@@ -140,9 +140,9 @@ The classification Report:
 
 |              | Precision  | Recall  |f1-score |
 | :----------- |:-----------| :-------|:--------|
-| 0            | 0.85       | 0.42    |0.56     |
-| 1            | 0.83       |   0.98  |0.90     |
-| avg / total  | 0.84       |    0.83 |0.81     |
+| 0            | 0.86       | 0.57    |0.69     |
+| 1            | 0.87       |   0.97  |0.92     |
+| avg / total  | 0.87       |    0.87 |0.86     |
 
 #### Confusion Matrix
 
@@ -152,8 +152,8 @@ The terms of a confusion matrix are the same as the classification report, only 
 
 |              | Predicted 0   | Predicted 1  |
 | :----------- |:--------------| :------------|
-| **Actual 0**     | 52           |   72         |
-| **Actual 1**     | 9            |   354        |
+| **Actual 0**     | 71           |   53      |
+| **Actual 1**     | 12           |   351     |
 
 
 #### Variable Importance
