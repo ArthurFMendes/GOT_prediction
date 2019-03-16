@@ -98,7 +98,7 @@ The ROC was as follows:
 With a AUC score of
 ```
 metrics.auc(fpr, tpr)
-0.8528836754643205
+0.8646138807429129
 ```
 #### Classification Report
 
@@ -138,11 +138,11 @@ F1 Score = 2*(Recall * Precision) / (Recall + Precision)
 ```
 The classification Report:
 
-|      | Precision          | Recall  |f1-score |
-| :------------- |:-------------| :-----|:-----|
-| 0            | 0.81 | 0.39 |0.52|
-| 1            | 0.82       |   0.97 |0.89|
-| avg / total  | 0.82      |    0.82 |0.80|
+|              | Precision  | Recall  |f1-score |
+| :----------- |:-----------| :-------|:--------|
+| 0            | 0.85       | 0.42    |0.56     |
+| 1            | 0.83       |   0.98  |0.90     |
+| avg / total  | 0.84       |    0.83 |0.81     |
 
 #### Confusion Matrix
 
@@ -152,8 +152,8 @@ The terms of a confusion matrix are the same as the classification report, only 
 
 |              | Predicted 0   | Predicted 1  |
 | :----------- |:--------------| :------------|
-| **Actual 0**     | 48            |   76         |
-| **Actual 1**     | 11            |   352        |
+| **Actual 0**     | 52           |   72         |
+| **Actual 1**     | 9            |   354        |
 
 
 #### Variable Importance
@@ -161,24 +161,21 @@ Another benefit that Random Forest brings is the **variable importance**. The mo
 
 |                            |Importance|
 | :------------- |:-------------|
-|out_house                     |0.280200|
-|popularity                    |0.260068|
-|book4_A_Feast_For_Crows       |0.188053|
-|male                          |0.049978|
-|book1_A_Game_Of_Thrones       |0.047403|
-|numDeadRelations              |0.044101|
-|out_culture                   |0.035871|
-|book5_A_Dance_with_Dragons    |0.023130|
-|isNoble                       |0.020967|
-|book2_A_Clash_Of_Kings        |0.020779|
-|book3_A_Storm_Of_Swords       |0.016258|
-|m_isAliveSpouse               |0.005120|
-|isMarried                     |0.005063|
-|out_title                     |0.003009|
-|m_isAliveFather               |0.000000|
-|m_isAliveHeir                 |0.000000|
-
-
+|popularity                    |0.228659|
+|out_dateOfBirth               |0.166500|
+|book4_A_Feast_For_Crows       |0.159622|
+|out_house                     |0.156254|
+|male                          |0.060581|
+|book1_A_Game_Of_Thrones       |0.050642|
+|numDeadRelations              |0.038546|
+|out_culture                   |0.027060|
+|book2_A_Clash_Of_Kings        |0.026905|
+|book5_A_Dance_with_Dragons    |0.025907|
+|isNoble                       |0.024055|
+|book3_A_Storm_Of_Swords       |0.019651|
+|isMarried                     |0.005941|
+|m_isAliveSpouse               |0.005469|
+|out_title                     |0.004208|
 
 #### References
 
