@@ -150,10 +150,10 @@ A confusion matrix is a table that is used to describe the performance of a clas
 
 The terms of a confusion matrix are the same as the classification report, only give in the actual number of observations that are true posite, true negative, false positive and false negative.
 
-|              | Predicted 0   | Predicted 1  |
-| :----------- |:--------------| :------------|
-| **Actual 0**     | 71           |   53      |
-| **Actual 1**     | 12           |   351     |
+|                       | Predicted Dead   | Predicted Alive  |
+| :-------------------- |:-----------------| :----------------|
+| **Actually Dead**     | 71               |   53             |
+| **Actually Alive**    | 12               |   351            |
 
 
 #### Variable Importance
