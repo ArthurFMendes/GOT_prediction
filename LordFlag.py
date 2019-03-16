@@ -15,20 +15,22 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn import metrics
-from sklearn.metrics import precision_recall_curve, auc
+from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import roc_curve
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import cross_val_score
+import seaborn as sns
 
 # Adjusting the Threshold
 def adjusted_classes(y_scores, t):
     """
-    This function adjusts class predictions based on the prediction threshold (t).
-    Will only work for binary classification problems.
+    This function adjusts class predictions based on the prediction threshold (t)
     """
     return [1 if y >= t else 0 for y in y_scores]
 
 
-# generate new class predictions based on the adjusted_classes function above 
+# Generate new class predictions based on the adjusted_classes function above 
 # and view the resulting confusion matrix and classification report
 
 def precision_recall_threshold(p, r, thresholds, t=0.5):
@@ -39,7 +41,8 @@ def precision_recall_threshold(p, r, thresholds, t=0.5):
     
 
     y_pred_adj = adjusted_classes(y_scores, t)
-    print(pd.DataFrame(confusion_matrix(y_test, y_pred_adj),
+    print('\nConfusion Matrix:\n',
+          pd.DataFrame(confusion_matrix(y_test, y_pred_adj),
                        columns=['Predicted Dead', 'Predicted ALive'], 
                        index=['Dead', 'Alive']))
     
@@ -62,25 +65,127 @@ def precision_recall_threshold(p, r, thresholds, t=0.5):
             markersize=15)
 
 
-# Defining a ROC curve
-def plot_roc_curve(fpr, tpr, label=None):
+# Plotting precision and recall
+
+def plot_precision_recall(precisions, recalls, thresholds):
     """
-    The ROC curve, modified
+    Creates a plot that analyze precision and recall for each different 
+    threshold
     """
-    plt.figure(figsize=(8,8))
-    plt.title('ROC Curve')
-    plt.plot(fpr, tpr, linewidth=2, label=label)
-    plt.plot([0, 1], [0, 1], 'k--')
-    plt.axis([-0.005, 1, 0, 1.005])
-    plt.xticks(np.arange(0,1, 0.05), rotation=90)
-    plt.xlabel("False Positive Rate")
-    plt.ylabel("True Positive Rate (Recall)")
+    plt.figure(figsize=(8, 8))
+    plt.title("Precision and Recall Scores as a function of the decision threshold")
+    plt.plot(thresholds, precisions[:-1], "b--", label="Precision")
+    plt.plot(thresholds, recalls[:-1], "g-", label="Recall")
+    plt.ylabel("Score")
+    plt.xlabel("Decision Threshold")
     plt.legend(loc='best')
+    
+    
+    
+    
     
 ########################
 # Fundamental Dataset Exploration
 ########################
 GoT_df = pd.read_excel('GOT_character_predictions.xlsx')
+
+      
+# Creating a dropped dataset to graph 
+
+GoT_toDrop   = GoT_df.loc[:,['S.No',
+                             'male',
+                             'dateOfBirth',
+                             'book1_A_Game_Of_Thrones',
+                             'book2_A_Clash_Of_Kings',
+                             'book3_A_Storm_Of_Swords',
+                             'book4_A_Feast_For_Crows',
+                             'book5_A_Dance_with_Dragons',
+                             'isMarried',
+                             'age',
+                             'isNoble',
+                             'numDeadRelations',
+                             'popularity',
+                             'isAlive',]]
+
+df_dropped = GoT_toDrop.dropna()
+
+
+# Plotting numerical variables
+
+# Date of Birth
+sns.distplot(df_dropped['dateOfBirth'],
+             bins = 35,
+             color = 'g')
+
+plt.xlabel('Birth Year')
+plt.show()
+
+# Age
+sns.distplot(df_dropped['age'],
+             bins = 30,
+             color = 'b')
+
+plt.xlabel('Age')
+plt.show()
+
+# Number of dead relatives
+sns.distplot(df_dropped['numDeadRelations'],
+             color = 'y')
+
+plt.xlabel('Number of Dead Relatives')
+plt.show()
+
+
+# Pair plot
+p = sns.pairplot(df_dropped[(df_dropped.age >= 0)]
+[["popularity", "numDeadRelations", "age", "isAlive"]], 
+hue = "isAlive", vars = ["popularity", "numDeadRelations", "age"],
+ kind = "reg", size = 4.)
+plt.savefig('Pairplot.png')
+plt.show()
+
+
+
+# Create A vizualization for the cultures
+
+cult = {
+    'Summer Islands': ['summer islands', 'summer islander', 'summer isles'],
+    'Ghiscari': ['ghiscari', 'ghiscaricari',  'ghis'],
+    'Asshai': ["asshai'i", 'asshai'],
+    'Lysene': ['lysene', 'lyseni'],
+    'Andal': ['andal', 'andals'],
+    'Braavosi': ['braavosi', 'braavos'],
+    'Dornish': ['dornishmen', 'dorne', 'dornish'],
+    'Myrish': ['myr', 'myrish', 'myrmen'],
+    'Westermen': ['westermen', 'westerman', 'westerlands'],
+    'Westerosi': ['westeros', 'westerosi'],
+    'Stormlander': ['stormlands', 'stormlander'],
+    'Norvoshi': ['norvos', 'norvoshi'],
+    'Northmen': ['the north', 'northmen'],
+    'Free Folk': ['wildling', 'first men', 'free folk'],
+    'Qartheen': ['qartheen', 'qarth'],
+    'Reach': ['the reach', 'reach', 'reachmen'],
+}
+
+def get_cult(value):
+    value = value.lower()
+    v = [k for (k, v) in cult.items() if value in v]
+    return v[0] if len(v) > 0 else value.title()
+
+
+GoT_df.loc[:, "culture"] = [get_cult(x) for x in 
+                         GoT_df.culture.fillna("")]
+
+data = GoT_df.groupby(
+        ["culture", "isAlive"]).count()["S.No"].unstack().copy(deep = True)
+data.loc[:, "total"]= data.sum(axis = 1)
+
+p = data[data.index != ""].sort_values("total")[[0, 1]].plot.barh(
+        stacked = True, rot = 0, figsize = (14, 12),)
+_ = p.set(xlabel = "No. of Characters", ylabel = "Culture"), p.legend(
+        ["Dead", "Alive"], loc = "lower right")
+plt.savefig('Culture Analysis.png')
+plt.show()
 
 # Cultures with high probabylity of dying (Sum of isAlive/Count isAlive > 0.5)
 
@@ -110,8 +215,8 @@ for val in enumerate(GoT_df.loc[ : , 'culture']):
 
 
 
-# Cultures with Low probability of dying
-        
+
+# Good cultures
 GoT_df['good_culture'] = 0
 
 good_culture = ['Braavosi',
@@ -132,6 +237,8 @@ for val in enumerate(GoT_df.loc[ : , 'culture']):
 
 
 # Houses with high probabylity of dying (Sum of isAlive/Count isAlive > 0.5)
+
+
 
 GoT_df['out_house'] = 0
 
@@ -210,7 +317,6 @@ for val in enumerate(GoT_df.loc[ : , 'title']):
                     
 
 
-
 ###############################################################################
 # Data Preparation
 ###############################################################################
@@ -222,26 +328,28 @@ print(
       )
 
 GoT_Chosen   = GoT_df.loc[:,['S.No',
-                                'male',
-                                'dateOfBirth',
-                                'book1_A_Game_Of_Thrones',
-                                'book2_A_Clash_Of_Kings',
-                                'book3_A_Storm_Of_Swords',
-                                'book4_A_Feast_For_Crows',
-                                'book5_A_Dance_with_Dragons',
-                                'isAliveMother',
-                                'isAliveFather',
-                                'isAliveHeir',
-                                'isAliveSpouse',
-                                'isMarried',
-                                'isNoble',
-                                'numDeadRelations',
-                                'popularity',
-                                'isAlive',
-                                'out_house',
-                                'out_culture',
-                                'out_title',
-                                'good_culture']]
+                             'male',
+                             'dateOfBirth',
+                             'house',
+                             'book1_A_Game_Of_Thrones',
+                             'book2_A_Clash_Of_Kings',
+                             'book3_A_Storm_Of_Swords',
+                             'book4_A_Feast_For_Crows',
+                             'book5_A_Dance_with_Dragons',
+                             'isAliveMother',
+                             'isAliveFather',
+                             'isAliveHeir',
+                             'isAliveSpouse',
+                             'isMarried',
+                             'isNoble',
+                             'numDeadRelations',
+                             'popularity',
+                             'age',
+                             'isAlive',
+                             'out_house',
+                             'out_culture',
+                             'out_title',
+                             'good_culture']]
 
 
 # Flagging missing values
@@ -278,6 +386,94 @@ for val in enumerate(GoT_Chosen.loc[ : , 'dateOfBirth']):
 
 
 
+# Age being filled with the median
+fill = GoT_Chosen['age'].median()
+
+GoT_Chosen['age'] = GoT_Chosen['age'].fillna(fill)
+
+
+# Outlier flags
+
+HighAge = 60
+
+
+GoT_Chosen['out_age'] = 0
+
+
+for val in enumerate(GoT_Chosen.loc[ : , 'dateOfBirth']):
+
+    if val[1] >= low_dateOfBirth:
+        GoT_Chosen.loc[val[0], 'out_age'] = 1
+
+
+# Outlier flag for number of dead relatives
+        
+
+HighDeadRela = 3
+
+
+GoT_Chosen['out_numrelatives'] = 0
+
+
+for val in enumerate(GoT_Chosen.loc[ : , 'numDeadRelations']):
+
+    if val[1] > HighDeadRela:
+        GoT_Chosen.loc[val[0], 'out_numrelatives'] = 1
+
+
+# Age being filled with the median
+fill = 2 #Means that their heir is no shown in the series
+
+GoT_Chosen['isAliveHeir'] = GoT_Chosen['isAliveHeir'].fillna(fill)
+
+
+# Age being filled with the median
+fill = " " #Means that their heir is no shown in the series
+
+GoT_Chosen['house'] = GoT_Chosen['house'].fillna(fill)
+
+GoT_Chosen.loc[:, "house"] = pd.factorize(GoT_Chosen.house)[0]
+
+###############################################################################
+# Correlation Analysis
+###############################################################################
+
+GoT_Chosen.head()
+
+
+df_corr = GoT_Chosen.corr().round(2)
+
+
+print(df_corr)
+
+
+df_corr.loc['isAlive'].sort_values(ascending = False)
+
+
+
+########################
+# Correlation Heatmap
+########################
+
+# Using palplot to view a color scheme
+sns.palplot(sns.color_palette('coolwarm', 12))
+
+fig, ax = plt.subplots(figsize=(15,15))
+
+df_corr2 = df_corr.iloc[1:19, 1:19]
+
+sns.heatmap(df_corr2,
+            cmap = 'coolwarm',
+            square = True,
+            annot = True,
+            linecolor = 'black',
+            linewidths = 0.5)
+
+
+plt.savefig('Game of Thrones Correlarion Heatmap.png')
+plt.show()
+
+
 # Checking again
 print(
       GoT_Chosen
@@ -288,6 +484,7 @@ print(
 
 
 GoT_data   = GoT_Chosen.loc[:,[ 'male',
+                                'dateOfBirth',
                                 'book1_A_Game_Of_Thrones',
                                 'book2_A_Clash_Of_Kings',
                                 'book3_A_Storm_Of_Swords',
@@ -295,6 +492,7 @@ GoT_data   = GoT_Chosen.loc[:,[ 'male',
                                 'book5_A_Dance_with_Dragons',
                                 'isMarried',
                                 'isNoble',
+                                'isAliveHeir',
                                 'numDeadRelations',
                                 'popularity',
                                 'm_isAliveSpouse',
@@ -302,7 +500,8 @@ GoT_data   = GoT_Chosen.loc[:,[ 'male',
                                 'out_culture',
                                 'out_title',
                                 'out_dateOfBirth',
-                                'good_culture']]
+                                'good_culture',
+                                'out_age']]
 
 
 GoT_target   = GoT_Chosen.loc[:,['isAlive']]
@@ -311,7 +510,7 @@ GoT_target   = GoT_Chosen.loc[:,['isAlive']]
 X_train, X_test, y_train, y_test = train_test_split(
             GoT_data,
             GoT_target.values.ravel(),
-            test_size = 0.25,
+            test_size = 0.1,
             random_state = 508,
             stratify = GoT_target)
 
@@ -347,13 +546,10 @@ print('Testing Score:', full_gini_fit.score(X_test, y_test).round(4))
 # Parameter tuning with GridSearchCV
 ########################
 
-from sklearn.model_selection import GridSearchCV
-
-
 # Creating a hyperparameter grid
-estimator_space = pd.np.arange(50, 500, 50)
-leaf_space = pd.np.arange(1, 200, 10)
-criterion_space = ['gini', 'entropy']
+estimator_space = pd.np.arange(50, 501, 10)
+leaf_space = pd.np.arange(1, 201, 10)
+criterion_space = ['entropy']
 bootstrap_space = [False]
 warm_start_space = [True]
 
@@ -379,6 +575,14 @@ full_forest_cv = GridSearchCV(full_forest_grid, param_grid, cv = 3)
 Tuned Logistic Regression Parameter: {'bootstrap': False, 'criterion': 'gini',
 'min_samples_leaf': 21, 'n_estimators': 200, 'warm_start': True}
 Tuned Logistic Regression Accuracy: 0.8019
+
+Tuned Logistic Regression Parameter: {'bootstrap': False, 'criterion': 
+'entropy', 'min_samples_leaf': 11, 'n_estimators': 460, 'warm_start': True}
+Tuned Logistic Regression Accuracy: 0.8108
+
+Tuned Logistic Regression Parameter: {'bootstrap': False, 'criterion': 'entropy',
+'min_samples_leaf': 11, 'n_estimators': 50, 'warm_start': True}
+Tuned Logistic Regression Accuracy: 0.8167
 '''
 
 # Fit it to the training data
@@ -392,7 +596,7 @@ print("Tuned Logistic Regression Accuracy:", full_forest_cv.best_score_.round(4)
 # Using the optimal Random Forrest
 
 # Full forest using entropy
-optimal_forrest = RandomForestClassifier(n_estimators = 350,
+optimal_forrest = RandomForestClassifier(n_estimators = 50,
                                          criterion = 'entropy',
                                          max_depth = None,
                                          min_samples_leaf = 11,
@@ -417,34 +621,10 @@ print('Testing Score:', optimal_forrest_fit.score(X_test, y_test).round(4))
 gini_full_train = optimal_forrest_fit.score(X_train, y_train)
 gini_full_test  = optimal_forrest_fit.score(X_test, y_test)
 
-# Probability for the threshold test
-y_scores = optimal_forrest.predict_proba(X_test)[:, 1]
-
-
-# Creating a threshold recall
-y_scores = optimal_forrest.predict_proba(X_test)[:, 1]
-
-
-# Generate the precision-recall curve for the classifier:
-p, r, thresholds = precision_recall_curve(y_test, y_scores)
-
-################################
-
-# Adjusting the Threshold
-precision_recall_threshold(p, r, thresholds, 0.51)
-
-
-## Ploting again
-fpr, tpr, auc_thresholds = roc_curve(y_test, y_scores)
-print(auc(fpr, tpr)) # AUC of ROC
-plot_roc_curve(fpr, tpr, 'recall_optimized')
 
 ###############################################################################
 # ROC curve for Random Forest
 ###############################################################################
-
-# Import necessary modules
-
 
 # Compute predicted probabilities: y_pred_prob
 y_pred_prob = optimal_forrest_fit.predict_proba(X_test)[:,1]
@@ -458,11 +638,11 @@ plt.plot(fpr, tpr)
 plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate')
 plt.title('ROC Curve')
-#plt.savefig('ROC Random Forest')
+plt.savefig('ROC Random Forest')
 plt.show()
 
 
-
+# AUC Score
 metrics.auc(fpr, tpr)
 
 
@@ -484,7 +664,41 @@ print ('\nClassification report:\n', classification_report(y_test, full_forest_p
 print ('\nConfusion matrix:\n',confusion_matrix(y_test, full_forest_predict))
 
 
+##################################
+# Precision recall, changing the threshhold
+##################################
 
+# Probability for the threshold test
+y_scores = optimal_forrest.predict_proba(X_test)[:, 1]
+
+# Generate the precision-recall curve for the classifier:
+p, r, thresholds = precision_recall_curve(y_test, y_scores)
+
+
+# Adjusting the Threshold to t = 0.51
+precision_recall_threshold(p, r, thresholds, 0.52)
+
+    
+# Plotting precision and recall   
+plot_precision_recall(p, r, thresholds)   
+
+
+
+# Cross validation score
+
+
+RF_Cross_Val = cross_val_score(optimal_forrest, GoT_data, GoT_target, cv = 3)
+
+print(pd.np.mean(RF_Cross_Val))
+
+
+
+
+model_results = pd.DataFrame({'Model' : ['Random Forest'],
+                              'Summary': [optimal_forrest]})
+
+
+model_results.to_excel('Birthdata_Summary.xlsx')
 
 
 ###############################################################################
@@ -511,7 +725,7 @@ GoT_target   = GoT_Chosen.loc[:,['isAlive']]
 X_train, X_test, y_train, y_test = train_test_split(
             GoT_data,
             GoT_target.values.ravel(),
-            test_size = 0.25,
+            test_size = 0.1,
             random_state = 508,
             stratify = GoT_target)
 
@@ -626,12 +840,9 @@ gbm_basic_train = gbm_optimal_fit.score(X_train, y_train)
 gmb_basic_test  = gbm_optimal_fit.score(X_test, y_test)
 
 
-###############################################################################
+###################################
 # ROC curve for GBM
-###############################################################################
-
-# Import necessary modules
-from sklearn.metrics import roc_curve
+###################################
 
 # Compute predicted probabilities: y_pred_prob
 y_pred_prob = gbm_optimal_fit.predict_proba(X_test)[:,1]
@@ -645,20 +856,25 @@ plt.plot(fpr, tpr)
 plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate')
 plt.title('ROC Curve')
-#plt.savefig('ROC for GBM')
+plt.savefig('ROC for GBM')
 plt.show()
 
+# AUC Score
 metrics.auc(fpr, tpr)
 
 
-###############################################################################
+#####################################
 # Classification Report and Confussion Matrix
-###############################################################################
+#####################################
 
 
 print ('\nClassification report:\n', classification_report(y_test, gbm_optimal_predict))
 print ('\nConfusion matrix:\n',confusion_matrix(y_test, gbm_optimal_predict))
 
+
+##################################
+# Precision recall, changing the threshhold
+##################################
 
 
 # Creating a threshold recall
@@ -668,13 +884,19 @@ y_scores = gbm_optimal.predict_proba(X_test)[:, 1]
 # Generate the precision-recall curve for the classifier:
 p, r, thresholds = precision_recall_curve(y_test, y_scores)
 
-################################
 
 # Adjusting the Threshold
-precision_recall_threshold(p, r, thresholds, 0.478)
+precision_recall_threshold(p, r, thresholds, 0.51)
 
 
-## Ploting again
-fpr, tpr, auc_thresholds = roc_curve(y_test, y_scores)
-print(auc(fpr, tpr)) # AUC of ROC
-plot_roc_curve(fpr, tpr, 'recall_optimized')
+# Plotting precision and recall   
+plot_precision_recall(p, r, thresholds)   
+
+
+##################################
+# Cross Validation Score
+##################################
+
+GBM_cross_val = cross_val_score(gbm_optimal, GoT_data, GoT_target, cv = 3)
+
+print(pd.np.mean(GBM_cross_val))
