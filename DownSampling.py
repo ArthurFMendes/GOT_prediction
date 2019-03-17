@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Mar 13 13:02:58 2019
+Created on Sat Mar 16 13:46:31 2019
 
 @author: arthurmendes
 """
+
 
 
 import numpy as np
@@ -21,6 +22,8 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import cross_val_score
 import seaborn as sns
+from sklearn.utils import resample
+
 
 # Adjusting the Threshold
 def adjusted_classes(y_scores, t):
@@ -483,7 +486,33 @@ print(
 
 
 
-GoT_data   = GoT_Chosen.loc[:,[ 'S.No',
+
+# Separate majority and minority classes
+df_majority = GoT_Chosen[GoT_Chosen['isAlive'] == 1]
+df_minority = GoT_Chosen[GoT_Chosen['isAlive'] == 0]
+ 
+
+# Downsample majority class
+df_majority_downsampled = resample(df_majority, 
+                                 replace=False,    # sample without replacement
+                                 n_samples=433,     # to match minority class
+                                 random_state=123) # reproducible results
+ 
+# Combine minority class with downsampled majority class
+df_downsampled = pd.concat([df_majority_downsampled, df_minority])
+ 
+# Display new class counts
+df_downsampled['isAlive'].value_counts()
+
+
+# 1    495
+# 0    495
+# Name: isAlive, dtype: int64
+
+
+
+
+GoT_data   = df_downsampled.loc[:,[ 'S.No',
                                 'male',
                                 'dateOfBirth',
                                 'book1_A_Game_Of_Thrones',
@@ -505,7 +534,7 @@ GoT_data   = GoT_Chosen.loc[:,[ 'S.No',
                                 'out_age']]
 
 
-GoT_target   = GoT_Chosen.loc[:,['isAlive']]
+GoT_target   = df_downsampled.loc[:,['isAlive']]
 
 
 X_train, X_test, y_train, y_test = train_test_split(
@@ -548,7 +577,7 @@ print('Testing Score:', full_gini_fit.score(X_test, y_test).round(4))
 ########################
 
 # Creating a hyperparameter grid
-estimator_space = pd.np.arange(50, 501, 10)
+estimator_space = pd.np.arange(50, 801, 10)
 leaf_space = pd.np.arange(1, 201, 10)
 criterion_space = ['entropy']
 bootstrap_space = [False]
@@ -573,17 +602,7 @@ full_forest_grid = RandomForestClassifier(max_depth = None,
 full_forest_cv = GridSearchCV(full_forest_grid, param_grid, cv = 3)
 
 '''
-Tuned Logistic Regression Parameter: {'bootstrap': False, 'criterion': 'gini',
-'min_samples_leaf': 21, 'n_estimators': 200, 'warm_start': True}
-Tuned Logistic Regression Accuracy: 0.8019
 
-Tuned Logistic Regression Parameter: {'bootstrap': False, 'criterion':
-'entropy', 'min_samples_leaf': 11, 'n_estimators': 460, 'warm_start': True}
-Tuned Logistic Regression Accuracy: 0.8108
-
-Tuned Logistic Regression Parameter: {'bootstrap': False, 'criterion': 'entropy',
-'min_samples_leaf': 11, 'n_estimators': 50, 'warm_start': True}
-Tuned Logistic Regression Accuracy: 0.8167
 '''
 
 # Fit it to the training data
@@ -597,7 +616,7 @@ print("Tuned Logistic Regression Accuracy:", full_forest_cv.best_score_.round(4)
 # Using the optimal Random Forrest
 
 # Full forest using entropy
-optimal_forrest = RandomForestClassifier(n_estimators = 50,
+optimal_forrest = RandomForestClassifier(n_estimators = 250,
                                          criterion = 'entropy',
                                          max_depth = None,
                                          min_samples_leaf = 11,
@@ -676,8 +695,8 @@ y_scores = optimal_forrest.predict_proba(X_test)[:, 1]
 p, r, thresholds = precision_recall_curve(y_test, y_scores)
 
 
-# Adjusting the Threshold to t = 0.51
-precision_recall_threshold(p, r, thresholds, 0.52)
+# Adjusting the Threshold to t = 0.53
+precision_recall_threshold(p, r, thresholds, 0.53)
 
 
 # Plotting precision and recall
@@ -693,10 +712,11 @@ RF_Cross_Val = cross_val_score(optimal_forrest, GoT_data, GoT_target, cv = 3)
 print(pd.np.mean(RF_Cross_Val))
 
 
-
+'''
 # Final submission
 my_submission = pd.DataFrame({'N.So': y_test, 'Is Alive': full_forest_predict})
 my_submission.to_excel('submission-070418.xlsx', index=False)
+'''
 
 
 ###############################################################################
@@ -791,20 +811,9 @@ gbm_grid_cv.fit(X_train, y_train)
 gbm_grid_pred = gbm_grid_cv.predict(X_test)
 
 '''
-Tuned GBM Parameter: {'criterion': 'friedman_mse', 'learning_rate': 0.1,
-'max_depth': 2, 'n_estimators': 50}
-Tuned GBM Accuracy: 0.8136
-
-Tuned GBM Parameter: {'criterion': 'friedman_mse', 'learning_rate': 0.1,
-'max_depth': 3, 'n_estimators': 220}
-Tuned GBM Accuracy: 0.8252
-
-Tuned GBM Parameter: {'criterion': 'friedman_mse', 'learning_rate': 1.1,
-'max_depth': 2, 'n_estimators': 140}
-
-Tuned GBM Parameter: {'criterion': 'friedman_mse', 'learning_rate': 0.1,
-'max_depth': 5, 'n_estimators': 90}
-Tuned GBM Accuracy: 0.8191
+Tuned GBM Parameter: {'criterion': 'friedman_mse', 'learning_rate': 0.1, 
+'max_depth': 4, 'n_estimators': 50}
+Tuned GBM Accuracy: 0.819
 '''
 
 # Print the optimal parameters and best score
@@ -812,14 +821,15 @@ print("Tuned GBM Parameter:", gbm_grid_cv.best_params_)
 print("Tuned GBM Accuracy:", gbm_grid_cv.best_score_.round(4))
 
 
+
 # Building a optimal GBM
 
 gbm_optimal = GradientBoostingClassifier(loss = 'deviance',
                                          learning_rate = 0.1,
-                                         n_estimators = 90,
-                                         max_depth = 3,
+                                         n_estimators = 50,
+                                         max_depth = 4,
                                          criterion = 'friedman_mse',
-                                         warm_start = False,
+                                         warm_start = True,
                                          random_state = 508,)
 
 
@@ -843,7 +853,7 @@ gmb_basic_test  = gbm_optimal_fit.score(X_test, y_test)
 ###################################
 
 # Compute predicted probabilities: y_pred_prob
-y_pred_prob = gbm_optimal_fit.predict_proba(X_test)[:,1]
+y_pred_prob = gbm_optimal.predict_proba(X_test)[:,1]
 
 # Generate ROC curve values: fpr, tpr, thresholds
 fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
@@ -870,31 +880,8 @@ print ('\nClassification report:\n', classification_report(y_test, gbm_optimal_p
 print ('\nConfusion matrix:\n',confusion_matrix(y_test, gbm_optimal_predict))
 
 
-##################################
-# Precision recall, changing the threshhold
-##################################
 
+GBM_Cross_Val = cross_val_score(gbm_optimal, GoT_data, GoT_target, cv = 3)
 
-# Creating a threshold recall
-y_scores = gbm_optimal.predict_proba(X_test)[:, 1]
+print(pd.np.mean(GBM_Cross_Val))
 
-
-# Generate the precision-recall curve for the classifier:
-p, r, thresholds = precision_recall_curve(y_test, y_scores)
-
-
-# Adjusting the Threshold
-precision_recall_threshold(p, r, thresholds, 0.51)
-
-
-# Plotting precision and recall
-plot_precision_recall(p, r, thresholds)
-
-
-##################################
-# Cross Validation Score
-##################################
-
-GBM_cross_val = cross_val_score(gbm_optimal, GoT_data, GoT_target, cv = 3)
-
-print(pd.np.mean(GBM_cross_val))
