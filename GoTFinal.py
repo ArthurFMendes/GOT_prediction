@@ -197,12 +197,13 @@ cultures = ['Vale',
             'Astapor',
             'Valyrian',
             'Astapori',
-            'Westerman',
             'Pentoshi',
-            'Free Folk',
-            'Northmen',
+            'Westerman',
             'Westermen',
-            'Westeros']
+            'Westeros',
+            'Sistermen',
+            'Riverlands',
+            'Qohor']
 
 
 for val in enumerate(GoT_df.loc[ : , 'culture']):
@@ -219,10 +220,26 @@ for val in enumerate(GoT_df.loc[ : , 'culture']):
 # Good cultures
 GoT_df['good_culture'] = 0
 
-good_culture = ['Braavosi',
+good_culture = ['Andal',
+                'Andals',
+                'Asshai',
+                'Asshai\'i',
                 'Crannogmen',
+                'Dorne',
                 'First Men',
-                'Qartheen',
+                'Ibbenese',
+                'Lhazarene',
+                'Lyseni',
+                'Naathi',
+                'Norvos',
+                'Qarth',
+                'Reachmen',
+                'Rhoynar',
+                'Stormlander',
+                'Summer Islander',
+                'Summer Island',
+                'Summer Isles',
+                'The Reach',
                 'Westerlands']
 
 
@@ -288,8 +305,83 @@ for val in enumerate(GoT_df.loc[ : , 'house']):
     if val[1] in house:
         GoT_df.loc[val[0], 'out_house'] = 1
 
+# Good Houses
+        
+GoT_df['good_house'] = 0
+
+house = ['Antler Men',
+         'Black Ears',
+         'Burned Men',
+         'Chataya\'s brothel',
+         'Citadel',
+         'Company of the Cat',
+         'Drowned men',
+         'Faceless Men',
+         'Golden Company',
+         'Graces',
+         'Happy Port',
+         'House Allyrion',
+         'House Ambrose',
+         'House Ashford',
+         'House Baelish',
+         'House Banefort',
+         'House Baratheon of Dragonstone',
+         'House Baratheon of King\'s Landing',
+         'House Belmore',
+         'House Bettley',
+         'House Blackbar',
+         'House Blackberry',
+         'House Blackmont',
+         'House Blanetree',
+         'House Blount',
+         'House Boggs',
+         'House Bolling',
+         'House Bolton of the Dreadfort',
+         'House Borrell',
+         'House Broom',
+         'House Brune of Brownhollow',
+         'House Brune of the Dyre Den',
+         'House Buckler',
+         'House Bulwer',
+         'House Celtigar',
+         'House Chester',
+         'House Chyttering',
+         'House Clifton',
+         'House Codd',
+         'House Coldwater',
+         'House Tyrell',
+         'House Condon',
+         'House Coklyn',
+         'House Connington',
+         'House Corbray',
+         'House Costayne',
+         'House Cox',
+         'House Crane',
+         'House Cupps',
+         'House Dalt',
+         'House Deddings',
+         'House Dondarrion',
+         'House Drinkwater',
+         'House Drumm',
+         'House Durrandon',
+         'House Erenford',
+         'House Errol',
+         'House Estren',
+         'House Farman',
+         'House Farwynd',
+         'House Flint',
+         'House Foote',
+         'House Fossoway',
+         'House Fowler']
 
 
+for val in enumerate(GoT_df.loc[ : , 'house']):
+    '''
+    Creating a flag if the house appear in the list of houses, which means
+    that they have a high probability of dying.
+    '''
+    if val[1] in house:
+        GoT_df.loc[val[0], 'good_house'] = 1
 
 # Creating flags for titles
 
@@ -316,7 +408,6 @@ for val in enumerate(GoT_df.loc[ : , 'title']):
         GoT_df.loc[val[0], 'out_title'] = 1
 
 
-
 ###############################################################################
 # Data Preparation
 ###############################################################################
@@ -330,6 +421,7 @@ print(
 GoT_Chosen   = GoT_df.loc[:,['S.No',
                              'male',
                              'dateOfBirth',
+                             'culture',
                              'house',
                              'book1_A_Game_Of_Thrones',
                              'book2_A_Clash_Of_Kings',
@@ -349,7 +441,8 @@ GoT_Chosen   = GoT_df.loc[:,['S.No',
                              'out_house',
                              'out_culture',
                              'out_title',
-                             'good_culture']]
+                             'good_culture',
+                             'good_house']]
 
 
 # Flagging missing values
@@ -427,12 +520,21 @@ fill = 2 #Means that their heir is no shown in the series
 GoT_Chosen['isAliveHeir'] = GoT_Chosen['isAliveHeir'].fillna(fill)
 
 
-# Age being filled with the median
+# house being filled with empty spaces
 fill = " " #Means that their heir is no shown in the series
 
 GoT_Chosen['house'] = GoT_Chosen['house'].fillna(fill)
 
 GoT_Chosen.loc[:, "house"] = pd.factorize(GoT_Chosen.house)[0]
+
+
+
+# culture being filled with empty spaces
+fill = " " #Means that their heir is no shown in the series
+
+GoT_Chosen['culture'] = GoT_Chosen['culture'].fillna(fill)
+
+GoT_Chosen.loc[:, "culture"] = pd.factorize(GoT_Chosen.culture)[0]
 
 ###############################################################################
 # Correlation Analysis
@@ -481,29 +583,26 @@ print(
       .sum()
       )
 
+# Dividing the data into train and test
 
-
-GoT_data   = GoT_Chosen.loc[:,[ 'S.No',
-                                'male',
+GoT_data   = GoT_Chosen.loc[:,[ 'male',
+                                'culture',
+                                'house',
                                 'dateOfBirth',
                                 'book1_A_Game_Of_Thrones',
                                 'book2_A_Clash_Of_Kings',
-                                'book3_A_Storm_Of_Swords',
                                 'book4_A_Feast_For_Crows',
                                 'book5_A_Dance_with_Dragons',
-                                'isMarried',
                                 'isNoble',
-                                'isAliveHeir',
                                 'numDeadRelations',
                                 'popularity',
                                 'm_isAliveSpouse',
                                 'out_house',
                                 'out_culture',
-                                'out_title',
                                 'out_dateOfBirth',
                                 'good_culture',
-                                'out_age']]
-
+                                'out_age',
+                                'good_house']]
 
 GoT_target   = GoT_Chosen.loc[:,['isAlive']]
 
@@ -548,8 +647,8 @@ print('Testing Score:', full_gini_fit.score(X_test, y_test).round(4))
 ########################
 
 # Creating a hyperparameter grid
-estimator_space = pd.np.arange(50, 501, 10)
-leaf_space = pd.np.arange(1, 201, 10)
+estimator_space = pd.np.arange(10, 100, 5)
+leaf_space = pd.np.arange(1, 30, 1)
 criterion_space = ['entropy']
 bootstrap_space = [False]
 warm_start_space = [True]
@@ -600,7 +699,7 @@ print("Tuned Logistic Regression Accuracy:", full_forest_cv.best_score_.round(4)
 optimal_forrest = RandomForestClassifier(n_estimators = 50,
                                          criterion = 'entropy',
                                          max_depth = None,
-                                         min_samples_leaf = 11,
+                                         min_samples_leaf = 6,
                                          bootstrap = False,
                                          warm_start = True,
                                          random_state = 508)
@@ -616,6 +715,11 @@ full_forest_predict = optimal_forrest.predict(X_test)
 # Scoring the gini model
 print('Training Score', optimal_forrest_fit.score(X_train, y_train).round(4))
 print('Testing Score:', optimal_forrest_fit.score(X_test, y_test).round(4))
+
+# Cross Validation
+RF_Cross_Val = cross_val_score(optimal_forrest, X_test, y_test, cv = 3)
+
+print(pd.np.mean(RF_Cross_Val).round(4))
 
 
 # Saving score objects
@@ -677,26 +781,17 @@ p, r, thresholds = precision_recall_curve(y_test, y_scores)
 
 
 # Adjusting the Threshold to t = 0.51
-precision_recall_threshold(p, r, thresholds, 0.52)
+precision_recall_threshold(p, r, thresholds, 0.51)
 
 
 # Plotting precision and recall
 plot_precision_recall(p, r, thresholds)
 
 
-
-# Cross validation score
-
-
-RF_Cross_Val = cross_val_score(optimal_forrest, GoT_data, GoT_target, cv = 3)
-
-print(pd.np.mean(RF_Cross_Val))
-
-
-
 # Final submission
-my_submission = pd.DataFrame({'N.So': y_test, 'Is Alive': full_forest_predict})
-my_submission.to_excel('submission-070418.xlsx', index=False)
+my_submission = pd.DataFrame({ 'Test': y_test, 
+                              'Is Alive': full_forest_predict})
+my_submission.to_excel('GoTfinal.xlsx', index=False)
 
 
 ###############################################################################
